@@ -4,21 +4,20 @@ import { Button } from "@/components/ui/button";
 import { FaArrowRight } from "react-icons/fa";
 import { CiMail } from "react-icons/ci";
 import { Input } from "@/components/ui/input";
-import axiosInstance from "../../config/axiosInstance";
 import toast from "react-hot-toast";
 import {
     InputOTP,
     InputOTPGroup,
     InputOTPSlot,
 } from "@/components/ui/input-otp";
+import axiosInstance from "@/config/axiosInstance";
 
 interface Props {
     setVarriant: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 interface UserData {
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
     password: string;
 }
@@ -28,8 +27,7 @@ const SignUp: React.FC<Props> = ({ setVarriant }) => {
     const [sendOTP, setSendOTP] = useState<boolean>(false);
     const [otp, setOTP] = useState<string>("");
     const [userData, setUserData] = useState<UserData>({
-        firstName: "",
-        lastName: "",
+        name: "",
         email: "",
         password: "",
     });
@@ -46,12 +44,7 @@ const SignUp: React.FC<Props> = ({ setVarriant }) => {
         event.preventDefault();
         setIsLoading(true);
 
-        if (
-            !userData.firstName ||
-            !userData.lastName ||
-            !userData.email ||
-            !userData.password
-        ) {
+        if (!userData.name || !userData.email || !userData.password) {
             toast.error("All fields required");
             return;
         }
@@ -74,21 +67,14 @@ const SignUp: React.FC<Props> = ({ setVarriant }) => {
         event.preventDefault();
         setIsLoading(true);
 
-        if (
-            !userData.firstName ||
-            !userData.lastName ||
-            !userData.email ||
-            !userData.password ||
-            !otp
-        ) {
+        if (!userData.name || !userData.email || !userData.password || !otp) {
             toast.error("All fields required");
             return;
         }
 
         try {
             const response = await axiosInstance.post("auth/signup", {
-                firstName: userData.firstName,
-                lastName: userData.lastName,
+                name: userData.name,
                 email: userData.email,
                 password: userData.password,
                 otp: otp,
@@ -123,19 +109,11 @@ const SignUp: React.FC<Props> = ({ setVarriant }) => {
                 {!sendOTP ? (
                     <>
                         <Input
-                            name="firstName"
+                            name="name"
                             className="mb-3"
-                            placeholder="First name"
+                            placeholder="Name"
                             type="text"
-                            value={userData.firstName}
-                            onChange={handleInputChange}
-                        />
-                        <Input
-                            name="lastName"
-                            className="mb-3"
-                            placeholder="Last name"
-                            type="text"
-                            value={userData.lastName}
+                            value={userData.name}
                             onChange={handleInputChange}
                         />
                         <Input

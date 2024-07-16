@@ -1,7 +1,7 @@
 /** @format */
+"use client";
 import React, { useEffect } from "react";
 
-import VercelSvg from "./svg/vercel-svg";
 import { HiOutlineChevronUpDown } from "react-icons/hi2";
 
 import { FiBell, FiSun } from "react-icons/fi";
@@ -9,9 +9,6 @@ import { BsSlashLg } from "react-icons/bs";
 import { FaEquals } from "react-icons/fa";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
-import { useGlobalContext } from "@/app/context/AuthContext";
-import { tabNames } from "@/constant/tabName";
-import { getCurrUser, removeSession } from "@/lib/getSession";
 import { useRouter } from "next/navigation";
 import {
     DropdownMenu,
@@ -32,6 +29,11 @@ import { LogOut, Settings, User } from "lucide-react";
 import { IoMoonOutline } from "react-icons/io5";
 import { useTheme } from "next-themes";
 import { RiComputerLine } from "react-icons/ri";
+import { tabNames } from "@/constant/tabName";
+import VercelSvg from "../../public/svg/vercel-svg";
+import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
+import { title } from "process";
 
 type Props = {};
 
@@ -39,20 +41,11 @@ const pages = tabNames;
 
 export default function Header() {
     const router = useRouter();
-    const { user, setUser, setToken } = useGlobalContext();
     const { theme, setTheme } = useTheme();
+    const { data: session, status: sessionStatus } = useSession();
 
-    async function handleLogout() {
-        console.log("start");
-
-        await new Promise<void>((resolve) => {
-            localStorage.clear();
-            resolve(); // Resolve immediately after clearing localStorage
-        });
-        removeSession();
-        router.push("/auth");
-        setUser({});
-        console.log("end");
+    if (sessionStatus !== "authenticated") {
+        return null;
     }
 
     async function fetchData() {
@@ -62,17 +55,7 @@ export default function Header() {
         if (!token) {
             return;
         }
-        const users = await getCurrUser(token);
-
-        setToken(token);
-        setUser(users);
     }
-
-    useEffect(() => {
-        fetchData();
-    }, [setUser, setToken]);
-
-    useEffect(() => {}, [user]);
 
     return (
         <div
@@ -80,6 +63,7 @@ export default function Header() {
             onClick={() => router.push("/")}
         >
             {/* first section */}
+            {}
             <div className="flex justify-between  ">
                 {/* left */}
                 <div className="flex items-center gap-3  ">
@@ -89,9 +73,19 @@ export default function Header() {
                     {/* slash  */}
                     <BsSlashLg className="dark:text-gray-500" />
 
-                    <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500  h-5 w-5 rounded-full" />
+                    {session?.user?.image ? (
+                        <Image
+                            src={session.user.image}
+                            alt="user-image"
+                            width={30}
+                            height={30}
+                            className="rounded-full"
+                        />
+                    ) : (
+                        <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-8 w-8 rounded-full" />
+                    )}
 
-                    <p className="font-bold">{user.firstName}</p>
+                    <p className="font-bold">{session.user?.name}</p>
                     <button
                         className=" p-2 text-xl transition-all hover:dark:bg-gray-800 py-3 rounded-md
         "
@@ -172,7 +166,7 @@ export default function Header() {
                                 </DropdownMenuSub>
                             </DropdownMenuRadioGroup>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={handleLogout}>
+                            <DropdownMenuItem onClick={() => signOut()}>
                                 <LogOut className="mr-2 h-4 w-4" />
                                 <span>Log out</span>
                                 <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
@@ -200,6 +194,9 @@ export default function Header() {
                             )}
                             variant={"ghost"}
                             key={i}
+                            onClick={() =>
+                                router.push(`/${title.toLowerCase()}`)
+                            }
                         >
                             {d.title}{" "}
                         </Button>

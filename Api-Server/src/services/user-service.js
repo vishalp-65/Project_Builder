@@ -27,17 +27,24 @@ async function GenerateJWT(reqbody) {
     }
 }
 
-async function SignUp(reqbody) {
+async function SignUp(userData) {
     try {
         // checking if user is present
         let user = await prisma.user.findUnique({
             where: {
-                email: reqbody.email,
+                email: userData.email,
             },
         });
 
+        if (user) {
+            // Throw error if email already exists
+            throw {
+                message: "User already exists for given email",
+            };
+        }
+
         // if user not present already then we can create user
-        if (!user) {
+        if (!user && userData.otp) {
             // Check OTP for the user in OTP model
             const response = await prisma.oTP.findFirst({
                 where: {
@@ -54,26 +61,20 @@ async function SignUp(reqbody) {
                     message: "The OTP is not valid",
                 };
             }
-
-            const salt = bcrypt.genSaltSync(9);
-            const encryptedPassword = bcrypt.hashSync(reqbody.password, salt);
-
-            // Creating user
-            const user = await prisma.user.create({
-                data: {
-                    firstName: reqbody.firstName,
-                    lastName: reqbody.lastName,
-                    email: reqbody.email,
-                    password: encryptedPassword,
-                    image: reqbody.img || "sample", // TODO: needs to add real image
-                },
-            });
-            return user;
         }
-        // Throw error if email already exists
-        throw {
-            message: "User already exists for given email",
-        };
+        const salt = bcrypt.genSaltSync(9);
+        const encryptedPassword = bcrypt.hashSync(userData.newPassword, salt);
+
+        // Creating user
+        const createdUser = await prisma.user.create({
+            data: {
+                name: userData.name,
+                email: userData.email,
+                password: encryptedPassword || "",
+                image: userData.image || "sample", // TODO: needs to add real image
+            },
+        });
+        return createdUser;
     } catch (error) {
         // Handle error
         console.log("Something went wrong in user service");

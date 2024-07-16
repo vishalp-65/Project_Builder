@@ -10,7 +10,7 @@ export default function VercelSvg(props: HtmlHTMLAttributes<HTMLOrSVGElement>) {
         <svg
             {...props}
             aria-label="Vercel Logo"
-            className={cn(" fill-black dark:fill-white h-6", props.className)}
+            className={cn("fill-black dark:fill-white h-6", props.className)}
             viewBox="0 0 75 65"
         >
             <path d="M37.59.25l36.95 64H.64l36.95-64z"></path>

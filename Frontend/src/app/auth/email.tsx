@@ -4,9 +4,8 @@ import { FaArrowRight } from "react-icons/fa";
 import { CiMail } from "react-icons/ci";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
-import axiosInstance from "@/config/axiosInstance";
 import { useRouter } from "next/navigation";
-import { useGlobalContext } from "../context/AuthContext";
+import axiosInstance from "@/config/axiosInstance";
 
 interface Props {
     setVarriant: React.Dispatch<React.SetStateAction<string | undefined>>;
@@ -19,7 +18,6 @@ interface UserData {
 
 const Email: React.FC<Props> = ({ setVarriant }) => {
     const router = useRouter();
-    const { setUser, setToken } = useGlobalContext();
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [userData, setUserData] = useState<UserData>({
@@ -49,10 +47,7 @@ const Email: React.FC<Props> = ({ setVarriant }) => {
             const response = await axiosInstance.post("auth/login", userData);
 
             const data = response.data.data;
-            localStorage.setItem("token", JSON.stringify(data.token));
-
-            setUser(data.user);
-            setToken(data.token);
+            localStorage.setItem("vercel_token", JSON.stringify(data.token));
 
             toast.success("Logged in");
             router.push("/");

@@ -1,4 +1,5 @@
 /** @format */
+"use client";
 
 import React, { useEffect, useState } from "react";
 import SearchSection from "./SearchSection";
@@ -13,7 +14,7 @@ export default function ProjectSection({}: Props) {
     useEffect(() => {}, [currSection]);
 
     return (
-        <div className="max-w-8xl  px-8 flex flex-col gap-5 mx-auto w-full">
+        <div className="max-w-8xl px-8 flex flex-col max-h-full min-h-screen gap-5 mx-auto w-full my-8">
             <SearchSection setCurrSection={setCurrSection} />
             {currSection === "allproject" ? <AllProjects /> : <CreateProject />}
         </div>

@@ -1,7 +1,7 @@
 import React from "react";
-import VercelSvg from "../../components/svg/vercel-svg";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import VercelSvg from "../../public/svg/vercel-svg";
 
 type Props = {};
 

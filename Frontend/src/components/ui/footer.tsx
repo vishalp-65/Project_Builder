@@ -1,9 +1,10 @@
 import React from "react";
 import DarkModeBtn from "../DarkModeBtn";
-import VercelSvg from "../svg/vercel-svg";
+
 import { FaGithub } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
 import { Label } from "./label";
+import VercelSvg from "../../../public/svg/vercel-svg";
 
 type Props = {};
 
@@ -13,7 +14,9 @@ export default function Footer({}: Props) {
             {/* top section */}
             <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <VercelSvg />
+                    <div className="w-9 h-9">
+                        <VercelSvg />
+                    </div>
                     <Label>© 2024</Label>
                     <Label className="text-blue-700">All systems normal</Label>
                 </div>

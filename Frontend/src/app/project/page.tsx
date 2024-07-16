@@ -1,13 +1,6 @@
 "use client";
-import Header from "@/components/Header";
-import Footer from "@/components/ui/Footer";
 import React, { useEffect, useState } from "react";
-import {
-    Card,
-    CardDescription,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
+import { CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import CodeImg from "../../../public/vercel.png";
 import { Button } from "@/components/ui/button";
 import { FaGithub } from "react-icons/fa";
@@ -17,10 +10,8 @@ import { TbActivityHeartbeat } from "react-icons/tb";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import axiosInstance from "@/config/axiosInstance";
-import { useGlobalContext } from "../context/AuthContext";
 import {
     extractRepoInfo,
-    formatDateTime,
     formatDateToHoursAgo,
     getVistURL,
 } from "@/lib/helper";
@@ -51,8 +42,6 @@ interface RepoData {
 }
 
 const Page = (props: Props) => {
-    const { token } = useGlobalContext();
-
     const [repoData, setRepoData] = useState<RepoData>({
         repoName: "",
         owner: "",
@@ -78,17 +67,17 @@ const Page = (props: Props) => {
     const projectId = searchParam.get("id");
 
     async function fetchProject() {
-        if (!token) return;
-        console.log("token", token);
+        // if (!token) return;
+        // console.log("token", token);
 
         try {
             const response = await axiosInstance.post(
                 "getproject/",
                 { id: projectId },
                 {
-                    headers: {
-                        Authorisation: token,
-                    },
+                    // headers: {
+                    //     Authorisation: token,
+                    // },
                 }
             );
             setProjectData(response?.data.data);
@@ -113,9 +102,9 @@ const Page = (props: Props) => {
         return status;
     }
 
-    useEffect(() => {
-        fetchProject();
-    }, [token]);
+    // useEffect(() => {
+    //     fetchProject();
+    // }, [token]);
 
     useEffect(() => {
         visitURLSetter();
@@ -125,7 +114,6 @@ const Page = (props: Props) => {
 
     return (
         <div>
-            <Header />
             <div className="min-h-[380px]">
                 <div className="flex items-center justify-between mt-5">
                     <CardHeader className="ml-2">
@@ -140,7 +128,7 @@ const Page = (props: Props) => {
                             target="_blank"
                         >
                             <Button
-                                className="border border-gray-400 rounded-r-sm"
+                                className="border border-gray-600 rounded-r-sm"
                                 variant={"ghost"}
                             >
                                 <FaGithub className="mr-3 h-5 w-5" />
@@ -175,14 +163,14 @@ const Page = (props: Props) => {
                             target="_blank"
                         >
                             <Button
-                                className="border border-gray-400 rounded-r-sm"
+                                className="border border-gray-600 rounded-r-sm"
                                 variant={"ghost"}
                             >
                                 Build logs
                             </Button>
                         </a>
                         <Button
-                            className="border border-gray-400 rounded-r-sm"
+                            className="border border-gray-600 rounded-r-sm"
                             variant={"ghost"}
                         >
                             <a
@@ -201,7 +189,7 @@ const Page = (props: Props) => {
                             <TbActivityHeartbeat />
                         </button>
                     </div>
-                    <div className="border border-gray-500 rounded-lg">
+                    <div className="border border-gray-600 rounded-lg">
                         <div className="flex items-start gap-10 justify-items-start p-6">
                             <div className="border border-gray-500 rounded-lg">
                                 <Image
@@ -275,7 +263,6 @@ const Page = (props: Props) => {
                     </div>
                 </div>
             </div>
-            <Footer />
         </div>
     );
 };

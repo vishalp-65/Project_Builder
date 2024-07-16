@@ -4,10 +4,10 @@ const nextConfig = {
         remotePatterns: [
             {
                 protocol: "https",
-                hostname: "vercel.com",
+                hostname: "avatars.githubusercontent.com",
             },
         ],
     },
 };
 
-export default nextConfig;
+module.exports = nextConfig;

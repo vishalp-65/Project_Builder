@@ -1,12 +1,10 @@
 /** @format */
 
 import React, { useEffect, useState } from "react";
-import VercelSvg from "./svg/vercel-svg";
 import { TbActivityHeartbeat } from "react-icons/tb";
 import { HiOutlineDotsHorizontal } from "react-icons/hi";
 import { FaGithub } from "react-icons/fa6";
 import { PiGitBranchDuotone } from "react-icons/pi";
-import { useGlobalContext } from "@/app/context/AuthContext";
 import toast from "react-hot-toast";
 import axiosInstance from "@/config/axiosInstance";
 import { useRouter } from "next/navigation";
@@ -18,25 +16,18 @@ import {
     DropdownMenuGroup,
     DropdownMenuItem,
     DropdownMenuLabel,
-    DropdownMenuPortal,
-    DropdownMenuRadioGroup,
     DropdownMenuSeparator,
     DropdownMenuShortcut,
-    DropdownMenuSub,
-    DropdownMenuSubContent,
-    DropdownMenuSubTrigger,
     DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { Button } from "./ui/button";
 import { Star } from "lucide-react";
-import { FiDelete } from "react-icons/fi";
 import { IoSettingsOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
+import VercelSvg from "public/svg/vercel-svg";
 
 type Props = {};
 
 export default function AllProjects({}: Props) {
-    const { token } = useGlobalContext();
     const router = useRouter();
 
     const [project, setProject] = useState<[]>([]);
@@ -46,12 +37,11 @@ export default function AllProjects({}: Props) {
     }
 
     async function fetchProject() {
-        if (!token) return;
         try {
             const response = await axiosInstance.get("getproject/", {
-                headers: {
-                    Authorisation: token,
-                },
+                // headers: {
+                //     Authorisation: token,
+                // },
             });
             console.log("response", response);
             setProject(response?.data?.data);
@@ -61,12 +51,12 @@ export default function AllProjects({}: Props) {
         }
     }
 
-    useEffect(() => {
-        fetchProject();
-    }, [token]);
+    // useEffect(() => {
+    //     fetchProject();
+    // }, [token]);
 
     return (
-        <div className="h-[300px]">
+        <div className="h-screen">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 transition-all xl:grid-cols-3 ">
                 {project.length > 0 &&
                     project.map((data: any, i) => (
@@ -85,7 +75,7 @@ export default function AllProjects({}: Props) {
                     ))}
             </div>
             {project.length <= 0 && (
-                <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center h-[80%]">
                     <div className="w-full flex items-center justify-center">
                         <p className="text-3xl text-gray-500">
                             Create new project

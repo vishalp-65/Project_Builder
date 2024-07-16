@@ -66,7 +66,7 @@ async function DeployProject(req, res) {
             overrides: {
                 containerOverrides: [
                     {
-                        name: "builder-image",
+                        name: "project-builder-image",
                         environment: [
                             {
                                 name: "GIT_REPOSITORY__URL",

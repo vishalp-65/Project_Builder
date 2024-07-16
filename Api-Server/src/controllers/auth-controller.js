@@ -8,22 +8,25 @@ const prisma = new PrismaClient();
 async function CreateUser(req, res) {
     try {
         // destructure all values
-        const { firstName, lastName, email, password, otp } = req.body;
-        console.log({ firstName, lastName, email, password, otp });
+        const { name, email, password, otp, image } = req.body;
+        console.log({ name, email, password, otp });
         // Check if all required fields are present
-        if (!firstName || !lastName || !email || !password || !otp) {
+        if (!name || !email) {
             errorObj.message = "All fields are required";
             errorObj.success = false;
             return res.status(StatusCodes.FORBIDDEN).json(errorObj);
         }
 
+        const newOTP = otp ? otp : "";
+        const newPassword = password ? password : "";
+
         // Calling user-service for creating user
         const response = await UserService.SignUp({
-            firstName,
-            lastName,
+            name,
             email,
-            password,
-            otp,
+            newPassword,
+            newOTP,
+            image,
         });
 
         successObj.message = "Successfully created a new user";

@@ -1,26 +1,30 @@
 "use client";
-import Header from "@/components/Header";
 import ProjectSection from "@/components/ProjectSection";
-import Footer from "@/components/ui/Footer";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { getToken } from "@/lib/getSession";
+import { useEffect } from "react";
 
-export default function Home() {
-    const token = getToken();
+export default function Home({ children }: { children: React.ReactNode }) {
     const router = useRouter();
+    const { data: session, status: sessionStatus } = useSession();
 
-    if (!token) {
-        router.push("/auth");
-        return null;
+    useEffect(() => {
+        if (sessionStatus === "unauthenticated") {
+            router.replace("/auth");
+        }
+    }, [sessionStatus, router]);
+
+    if (sessionStatus === "loading") {
+        return (
+            <div className="flex items-center justify-center text-xl h-screen w-full">
+                <p>Loading...</p>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen w-full flex gap-7 flex-col  ">
-            <Header />
-            <section>
-                <ProjectSection />
-            </section>
-            <Footer />
+        <div className="flex flex-col">
+            <ProjectSection />
         </div>
     );
 }

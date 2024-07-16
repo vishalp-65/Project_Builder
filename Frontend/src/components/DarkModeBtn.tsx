@@ -15,13 +15,14 @@ export default function DarkModeBtn({}: Props) {
     const { theme, setTheme } = useTheme();
 
     return (
-        <div>
-            <section className="felx ">
+        <div className="border border-gray-500 dark:border-gray-500 rounded-full">
+            <section className="flex">
                 <button
                     onClick={() => setTheme("dark")}
                     className={cn(
                         "p-2  rounded-full text-gray-400 dark:hover:text-white hover:text-slate-800 transition-all",
-                        theme === "dark" && "bg-gray-300 dark:bg-gray-800  "
+                        theme === "dark" &&
+                            "bg-gray-400 dark:bg-gray-700  text-gray-700 dark:text-gray-400"
                     )}
                 >
                     <IoMoonOutline />
@@ -30,7 +31,8 @@ export default function DarkModeBtn({}: Props) {
                     onClick={() => setTheme("light")}
                     className={cn(
                         "p-2  rounded-full text-gray-400 dark:hover:text-white hover:text-slate-800 transition-all",
-                        theme === "light" && "bg-gray-300 dark:bg-gray-800 "
+                        theme === "light" &&
+                            "bg-gray-400 dark:bg-gray-700 text-gray-700 dark:text-gray-400"
                     )}
                 >
                     <FiSun />
@@ -39,7 +41,8 @@ export default function DarkModeBtn({}: Props) {
                     onClick={() => setTheme("system")}
                     className={cn(
                         "p-2  rounded-full text-gray-400 dark:hover:text-white hover:text-slate-800 transition-all",
-                        theme === "system" && "bg-gray-300 dark:bg-gray-800 "
+                        theme === "system" &&
+                            "bg-gray-400 dark:bg-gray-700  text-gray-700 dark:text-gray-400"
                     )}
                 >
                     <RiComputerLine />

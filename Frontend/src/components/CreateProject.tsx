@@ -1,21 +1,14 @@
 /* eslint-disable react/no-unescaped-entities */
-import React, { ChangeEvent, useMemo, useState } from "react";
-import { Input } from "./ui/input";
-import { Button } from "./ui/button";
-import { IoCreate } from "react-icons/io5";
+import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axiosInstance from "@/config/axiosInstance";
-import { useGlobalContext } from "@/app/context/AuthContext";
 import { useRouter } from "next/navigation";
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardFooter,
-    CardHeader,
-    CardTitle,
-} from "@/components/ui/card";
-import { Label } from "./ui/label";
+import { CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "./ui/button";
+import { useSession } from "next-auth/react";
+import axios from "axios";
+import { FaReact } from "react-icons/fa";
+import { DialogBar } from "./DialogBar";
 
 type Props = {};
 
@@ -25,34 +18,34 @@ interface ProjectData {
     customDomain: string;
 }
 
+interface Repo {
+    id: number;
+    name: string;
+    language: string;
+    clone_url: string;
+}
+
 const CreateProject = (props: Props) => {
-    const { token } = useGlobalContext();
     const router = useRouter();
+    const { data: session } = useSession();
+    const [repos, setRepos] = useState<Repo[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
 
     const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [dialogData, setDialogData] = useState({ name: "", clone_url: "" });
     const [projectData, setProjectData] = useState<ProjectData>({
         gitURL: "",
         name: "",
         customDomain: "",
     });
 
-    function handleInputChange(e: ChangeEvent<HTMLInputElement>) {
-        const { name, value } = e.target;
-        setProjectData({
-            ...projectData,
-            [name]: value,
-        });
-    }
+    // Handle dialog open close
+    const handleImportClick = (repo: Repo) => {
+        setDialogData({ name: repo.name, clone_url: repo.clone_url });
+        setIsOpen(true);
+    };
 
-    const isValidURL: boolean = useMemo(() => {
-        if (!projectData.gitURL || projectData.gitURL.trim() === "")
-            return false;
-        const regex = new RegExp(
-            /^(?:https?:\/\/)?(?:www\.)?github\.com\/([^\/]+)\/([^\/]+)(?:\/)?$/
-        );
-
-        return regex.test(projectData.gitURL);
-    }, [projectData.gitURL]);
+    const handleCreateClick = () => {};
 
     async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
@@ -63,20 +56,15 @@ const CreateProject = (props: Props) => {
             setIsLoading(false);
             return;
         }
-        if (!isValidURL) {
-            toast.error("Please enter vaild URL");
-            setIsLoading(false);
-            return;
-        }
 
         try {
             const response = await axiosInstance.post(
                 "project/create",
                 projectData,
                 {
-                    headers: {
-                        Authorisation: token,
-                    },
+                    // headers: {
+                    //     Authorisation: token,
+                    // },
                 }
             );
 
@@ -93,10 +81,47 @@ const CreateProject = (props: Props) => {
         setIsLoading(false);
     }
 
+    useEffect(() => {
+        if (session?.accessToken) {
+            console.log("Access Token:", session.accessToken);
+            const fetchRepos = async () => {
+                try {
+                    const res = await axios.get(
+                        "https://api.github.com/user/repos",
+                        {
+                            headers: {
+                                Authorization: `token ${session.accessToken}`,
+                            },
+                        }
+                    );
+                    setRepos(res.data);
+                    console.log("repo", repos);
+                } catch (error) {
+                    console.error("Error fetching repositories:", error);
+                }
+            };
+            fetchRepos();
+        } else {
+            console.log("No access token found");
+        }
+    }, [session]);
+
+    if (!session) return <div>Loading...</div>;
+
+    if (!repos)
+        return (
+            <div className="flex items-center justify-center">
+                Fetching repositories data....
+            </div>
+        );
+
     return (
-        <div>
-            <div className="flex flex-row items-center justify-evenly mt-5 border border-gray-400 rounded-lg p-3">
-                <div className="flex flex-col items-start justify-between gap-5">
+        <div className="mb-6">
+            <div
+                className="w-full flex flex-col items-center justify-evenly mt-5 border 
+            border-gray-300 dark:border-gray-600 rounded-lg px-5 py-3 gap-7 lg:gap-4 lg:px-5 lg:py-3 lg:flex lg:flex-row"
+            >
+                <div className="w-full lg:w-[45%] flex flex-col items-start justify-between gap-5">
                     <p className="text-4xl font-bold">
                         Let's build something new
                     </p>
@@ -107,71 +132,56 @@ const CreateProject = (props: Props) => {
                         Repository or paste your gitHub repo URL.
                     </p>
                 </div>
-                <div className="flex flex-col items-start justify-center mb-5">
-                    <div className="w-[500px] border border-gray-400 rounded-lg p-3 mt-5">
-                        <form onSubmit={onSubmit}>
-                            <CardHeader>
-                                <CardTitle>Create project</CardTitle>
-                                <CardDescription>
-                                    Deploy your new project in one-click.
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid w-full items-center gap-4">
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="name">Name</Label>
-                                        <Input
-                                            name="name"
-                                            className="mb-3"
-                                            placeholder="Project name"
-                                            type="text"
-                                            value={projectData.name}
-                                            onChange={handleInputChange}
-                                        />
+                <div className="w-full lg:w-[55%] flex flex-col items-start bg-white dark:bg-black justify-center mb-5">
+                    <div className="w-full border border-gray-300 dark:border-gray-600 rounded-lg p-3">
+                        <CardHeader>
+                            <CardTitle>Import Git Repository</CardTitle>
+                        </CardHeader>
+
+                        <div className="h-full px-4">
+                            <div
+                                className="h-96 flex flex-col border border-gray-300 dark:border-gray-800 rounded-sm items-center 
+                            justify-between overflow-y-auto "
+                            >
+                                {repos.map((repo) => (
+                                    <div
+                                        className="flex border border-x-gray-300 border-t-gray-300 px-3 
+                                    py-3 items-center justify-between w-full dark:border-x-gray-800 dark:border-t-gray-800"
+                                        key={repo.id}
+                                    >
+                                        <div className="flex items-center justify-between gap-3">
+                                            <div className="border border-gray-500 rounded-full w-7 h-7 flex items-center justify-center p-1">
+                                                <FaReact className="text-black dark:text-gray-300" />
+                                            </div>
+                                            <div className="flex flex-col gap-1 justify-between items-start">
+                                                <p className="truncate w-[160px] md:w-full">
+                                                    {repo.name}
+                                                </p>
+                                                <p className="text-gray-500 text-sm">
+                                                    {repo.language}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            className="border border-gray-400"
+                                            variant={"default"}
+                                            onClick={() =>
+                                                handleImportClick(repo)
+                                            }
+                                        >
+                                            Import
+                                        </Button>
                                     </div>
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="name">
-                                            Custom Domain
-                                        </Label>
-                                        <Input
-                                            name="customDomain"
-                                            className="mb-3"
-                                            placeholder="Enter Custom Domain if you want"
-                                            type="text"
-                                            value={projectData.customDomain}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                    <div className="flex flex-col space-y-1.5">
-                                        <Label htmlFor="name">GitHub URL</Label>
-                                        <Input
-                                            name="gitURL"
-                                            className="mb-3"
-                                            placeholder="Enter GitHub URL"
-                                            type="text"
-                                            value={projectData.gitURL}
-                                            onChange={handleInputChange}
-                                        />
-                                    </div>
-                                </div>
-                            </CardContent>
-                            <CardFooter className="flex justify-between">
-                                <Button
-                                    className="border border-gray-400"
-                                    variant={"default"}
-                                    size={"xl"}
-                                    disabled={isLoading}
-                                >
-                                    <IoCreate className="mr-3 h-5 w-5" />
-                                    <p className="text-base">
-                                        Create your project
-                                    </p>
-                                </Button>
-                            </CardFooter>
-                        </form>
+                                ))}
+                            </div>
+                            <div className="text-sm text-gray-600 mt-4 dark:text-gray-400">
+                                <p>Import Third-Party Git Repository →</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+            <DialogBar open={isOpen} setOpen={setIsOpen} data={dialogData} />
         </div>
     );
 };

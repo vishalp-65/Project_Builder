@@ -5,15 +5,15 @@ import { FaArrowRight, FaGithub } from "react-icons/fa";
 import { LiaGitlab } from "react-icons/lia";
 import { IoLogoBitbucket } from "react-icons/io5";
 import { CiMail } from "react-icons/ci";
-import { useGlobalContext } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
+import { signIn, useSession } from "next-auth/react";
 
 interface Props {
     setVarriant: React.Dispatch<React.SetStateAction<string | undefined>>;
 }
 
 const AuthProvider: React.FC<Props> = ({ setVarriant }) => {
-    const token = localStorage.getItem("token");
+    const { data: session, status: sessionStatus } = useSession();
 
     const router = useRouter();
 
@@ -22,10 +22,10 @@ const AuthProvider: React.FC<Props> = ({ setVarriant }) => {
     }, []);
 
     useEffect(() => {
-        if (token) {
-            router.push("/");
+        if (sessionStatus === "authenticated") {
+            router.replace("/");
         }
-    }, [token]);
+    }, [sessionStatus, router]);
 
     return (
         <div className="my-10 flex flex-col items-center gap-3 justify-center">
@@ -36,6 +36,9 @@ const AuthProvider: React.FC<Props> = ({ setVarriant }) => {
                     className="hover:bg-slate-500"
                     variant={"secondary"}
                     size={"xl"}
+                    onClick={() => {
+                        signIn("github");
+                    }}
                 >
                     <FaGithub className="mr-3 h-5 w-5" />
                     <p className="text-base">Continue with GitHub</p>

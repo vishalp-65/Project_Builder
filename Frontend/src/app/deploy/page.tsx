@@ -1,14 +1,10 @@
 "use client";
-import Header from "@/components/Header";
-import Footer from "@/components/ui/Footer";
 import { useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
-import { useGlobalContext } from "../context/AuthContext";
 import axiosInstance from "@/config/axiosInstance";
 import { getToken } from "@/lib/getSession";
 import { Fira_Code } from "next/font/google";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { extractRepoInfo } from "@/lib/helper";
 import {
     Card,
@@ -41,7 +37,6 @@ interface RepoData {
 
 const Page = (props: Props) => {
     const token = getToken();
-    const { user } = useGlobalContext();
     const logContainerRef = useRef<HTMLElement>(null);
 
     const [projectData, setProjectData] = useState<ProjectData>();
@@ -195,9 +190,8 @@ const Page = (props: Props) => {
     useEffect(() => {}, [isDone]);
 
     return (
-        <div>
+        <div className="mt-4">
             <div className="min-h-screen w-full flex gap-7 flex-col  ">
-                <Header />
                 <div className="flex items-start justify-between">
                     <CardHeader className="ml-2">
                         <CardTitle className="text-4xl ">
@@ -211,7 +205,7 @@ const Page = (props: Props) => {
                     <div className="flex items-center justify-between gap-4 mr-5">
                         <a href={projectData?.gitURL} target="_blank">
                             <Button
-                                className="border border-gray-400 rounded-r-sm"
+                                className="border border-gray-600 rounded-r-sm"
                                 variant={"ghost"}
                             >
                                 Repository
@@ -226,7 +220,7 @@ const Page = (props: Props) => {
                 </div>
                 <div className="flex items-center justify-between gap-7">
                     <div>
-                        <div className="w-[600px] mt-1 border rounded-lg border-gray-400 px-4 pt-6 ml-4">
+                        <div className="w-[600px] mt-1 border rounded-lg border-gray-600 px-4 pt-6 ml-4">
                             <form>
                                 <CardContent>
                                     <div className="grid w-full items-center gap-4">
@@ -257,7 +251,7 @@ const Page = (props: Props) => {
                                         <div className="flex space-y-1.5 items-center justify-between">
                                             <Label>Created by</Label>
                                             <Label htmlFor="name">
-                                                {user.firstName}
+                                                {/* {user.firstName} */}Name
                                             </Label>
                                         </div>
                                         <div className="flex space-y-1.5 items-center justify-between">
@@ -345,7 +339,6 @@ const Page = (props: Props) => {
                         )}
                     </div>
                 </div>
-                <Footer />
             </div>
         </div>
     );

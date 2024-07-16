@@ -22,7 +22,7 @@ export function removeSession() {
 }
 
 export function getToken() {
-    let token = localStorage.getItem("token");
+    let token = localStorage.getItem("vercel_token");
     token = token ? token.replace(/^"|"$/g, "") : null;
 
     return token;
