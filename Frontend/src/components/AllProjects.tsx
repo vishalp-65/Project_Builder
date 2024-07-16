@@ -24,11 +24,13 @@ import { Star } from "lucide-react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { AiOutlineDelete } from "react-icons/ai";
 import VercelSvg from "public/svg/vercel-svg";
+import { useSession } from "next-auth/react";
 
 type Props = {};
 
 export default function AllProjects({}: Props) {
     const router = useRouter();
+    const { data: session } = useSession();
 
     const [project, setProject] = useState<[]>([]);
 
@@ -39,9 +41,9 @@ export default function AllProjects({}: Props) {
     async function fetchProject() {
         try {
             const response = await axiosInstance.get("getproject/", {
-                // headers: {
-                //     Authorisation: token,
-                // },
+                headers: {
+                    Authorisation: session?.serverToken,
+                },
             });
             console.log("response", response);
             setProject(response?.data?.data);
@@ -51,9 +53,9 @@ export default function AllProjects({}: Props) {
         }
     }
 
-    // useEffect(() => {
-    //     fetchProject();
-    // }, [token]);
+    useEffect(() => {
+        fetchProject();
+    }, []);
 
     return (
         <div className="h-screen">
@@ -159,9 +161,9 @@ function ProjectCard(props: ProjectCardProps) {
                     </DropdownMenu>
                 </section>
             </section>
-            <button className="flex items-center gap-2 rounded-full px-4 py-1 dark:bg-gray-900 w-fit">
+            <button className="flex items-center gap-2 rounded-full px-4 py-1 dark:bg-gray-900 w-[80%]">
                 <FaGithub />
-                <p className="text-ellipsis text-sm overflow-hidden max-w-52 whitespace-nowrap">
+                <p className="text-ellipsis text-sm overflow-hidden max-w-52 whitespace-nowrap truncate">
                     {githubRepo}
                 </p>
             </button>

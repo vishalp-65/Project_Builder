@@ -136,7 +136,6 @@ async function CreateProject(req, res) {
             customDomain: z.string(),
         });
         const safeParseResult = schema.safeParse(req.body);
-        console.log("not");
         if (safeParseResult.error) {
             errorObj.message = safeParseResult.error;
             errorObj.success = false;

@@ -44,13 +44,19 @@ export default function Header() {
     const { data: session, status: sessionStatus } = useSession();
 
     if (sessionStatus !== "authenticated") {
+        router.push("/auth");
         return null;
     }
 
     const handleNavbarClick = (page: any) => {
         const lowerTittle = page.title.toLocaleLowerCase();
+        page.active = true;
         if (page.isAccess) {
-            router.push(`/${lowerTittle}`);
+            if (page.title === "Overview") {
+                router.push("/");
+            } else {
+                router.push(`/${lowerTittle}`);
+            }
         }
     };
 

@@ -13,16 +13,30 @@ import { Button } from "@/components/ui/button";
 
 interface dataRepo {
     name: string;
-    clone_url: string;
+    customDomain: string;
+    gitURL: string;
 }
 
 interface dialogBar {
     open: boolean;
     setOpen: React.Dispatch<React.SetStateAction<boolean>>;
     data: dataRepo;
+    setData: React.Dispatch<React.SetStateAction<dataRepo>>;
+    handleCreateClick: () => void;
 }
 
-export function DialogBar({ open, setOpen, data }: dialogBar) {
+export function DialogBar({
+    open,
+    setOpen,
+    data,
+    setData,
+    handleCreateClick,
+}: dialogBar) {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const updatedData = { ...data, customDomain: e.target.value };
+        setData(updatedData);
+    };
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-[425px]">
@@ -39,14 +53,17 @@ export function DialogBar({ open, setOpen, data }: dialogBar) {
                         </Label>
                         <Input
                             id="name"
-                            value=""
+                            value={data.customDomain}
                             type="text"
                             className="col-span-3"
+                            onChange={handleChange}
                         />
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit">Create project</Button>
+                    <Button type="submit" onClick={handleCreateClick}>
+                        Create project
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

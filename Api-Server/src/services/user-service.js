@@ -4,23 +4,17 @@ const bcrypt = require("bcrypt");
 const jsonwebtoken = require("jsonwebtoken");
 const otpGenerator = require("otp-generator");
 const { sendVerificationEmail } = require("../utils/helper");
+const { use } = require("bcrypt/promises");
 
 const prisma = new PrismaClient();
 
-async function GenerateJWT(reqbody) {
+async function GenerateJWT(email, id) {
     try {
-        // checking if user is present
-        const user = await prisma.user.findUnique({
-            where: {
-                email: reqbody.email,
-            },
-        });
-
         // returning token
         return jsonwebtoken.sign(
-            { id: user.id, email: user.email },
+            { id: id, email: email },
             ServerConfig.JWT_SECRET_KEY,
-            { expiresIn: "7d" }
+            { expiresIn: "30d" }
         );
     } catch (error) {
         console.log(error);
@@ -38,9 +32,8 @@ async function SignUp(userData) {
 
         if (user) {
             // Throw error if email already exists
-            throw {
-                message: "User already exists for given email",
-            };
+            const data = SignIn(userData.email, userData.password, true);
+            return data;
         }
 
         // if user not present already then we can create user
@@ -48,14 +41,14 @@ async function SignUp(userData) {
             // Check OTP for the user in OTP model
             const response = await prisma.oTP.findFirst({
                 where: {
-                    email: reqbody.email,
+                    email: userData.email,
                 },
             });
 
             console.log("otp", response);
 
             // OTP not found for the email or not equal to otp
-            if (response.length === 0 || reqbody.otp !== response.otp) {
+            if (response.length === 0 || userData.otp !== response.otp) {
                 throw {
                     success: false,
                     message: "The OTP is not valid",
@@ -83,12 +76,12 @@ async function SignUp(userData) {
     }
 }
 
-async function SignIn(reqbody) {
+async function SignIn(email, password, isGithub = false) {
     try {
         // checking if user is present
         const user = await prisma.user.findFirst({
             where: {
-                email: reqbody.email,
+                email: email,
             },
         });
 
@@ -98,21 +91,25 @@ async function SignIn(reqbody) {
             };
         }
 
-        // Check password with current user
-        const isPasswordMatch = await bcrypt.compareSync(
-            reqbody.password,
-            user.password
-        );
-        if (!isPasswordMatch) {
-            throw {
-                message: "Incorrect password",
-            };
+        if (!isGithub) {
+            // Check password with current user
+            const isPasswordMatch = await bcrypt.compareSync(
+                password,
+                user.password
+            );
+            if (!isPasswordMatch) {
+                throw {
+                    message: "Incorrect password",
+                };
+            }
         }
         // Generate JWT token for user
-        const token = await GenerateJWT(reqbody);
+        const token = await GenerateJWT(email, user.id);
 
         // Settign password undefined because we need to send user obj to frontend
         user.password = undefined;
+
+        console.log("data returned", token);
 
         // Set cookie for token and return success response
         return { user, token };

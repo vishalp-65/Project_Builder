@@ -15,6 +15,8 @@ async function authenticate(req, res, next) {
             req.cookies.token ||
             req.header("Authorisation").replace("Bearer ", "");
 
+        console.log("token", token);
+
         //if token missing, then return response
         if (!token) {
             errorObj.success = false;

@@ -1,7 +1,7 @@
 export const tabNames = [
     {
         title: "Overview",
-        active: true,
+        active: false,
         isAccess: true,
     },
     {

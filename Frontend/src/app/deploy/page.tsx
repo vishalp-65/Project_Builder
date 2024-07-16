@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FaGithub } from "react-icons/fa";
+import { useSession } from "next-auth/react";
 
 type Props = {};
 const firaCode = Fira_Code({ subsets: ["latin"] });
@@ -38,6 +39,7 @@ interface RepoData {
 const Page = (props: Props) => {
     const token = getToken();
     const logContainerRef = useRef<HTMLElement>(null);
+    const { data: session } = useSession();
 
     const [projectData, setProjectData] = useState<ProjectData>();
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -60,7 +62,7 @@ const Page = (props: Props) => {
                 { id: projectId },
                 {
                     headers: {
-                        Authorisation: token,
+                        Authorisation: session?.serverToken,
                     },
                 }
             );
@@ -80,7 +82,7 @@ const Page = (props: Props) => {
                 { id: deployementId },
                 {
                     headers: {
-                        Authorisation: token,
+                        Authorisation: session?.serverToken,
                     },
                 }
             );
@@ -103,7 +105,7 @@ const Page = (props: Props) => {
                 { projectId: projectId },
                 {
                     headers: {
-                        Authorisation: token,
+                        Authorisation: session?.serverToken,
                     },
                 }
             );
@@ -135,7 +137,7 @@ const Page = (props: Props) => {
                 { deployementId: deployementId },
                 {
                     headers: {
-                        Authorisation: token,
+                        Authorisation: session?.serverToken,
                     },
                 }
             );
@@ -174,6 +176,7 @@ const Page = (props: Props) => {
 
     useEffect(() => {
         fetchProjectData();
+        toast.error("Due to kafka service down, live logs may not be see");
     }, []);
 
     useEffect(() => {
@@ -251,7 +254,7 @@ const Page = (props: Props) => {
                                         <div className="flex space-y-1.5 items-center justify-between">
                                             <Label>Created by</Label>
                                             <Label htmlFor="name">
-                                                {/* {user.firstName} */}Name
+                                                {session?.user?.name}
                                             </Label>
                                         </div>
                                         <div className="flex space-y-1.5 items-center justify-between">

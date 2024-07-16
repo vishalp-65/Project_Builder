@@ -35,7 +35,6 @@ const CreateProject = (props: Props) => {
     const [searchData, setSearchData] = useState("");
     // const [filteredRepo, setFilteredRepo] = useState(repos);
     const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [dialogData, setDialogData] = useState({ name: "", clone_url: "" });
     const [projectData, setProjectData] = useState<ProjectData>({
         gitURL: "",
         name: "",
@@ -44,30 +43,36 @@ const CreateProject = (props: Props) => {
 
     // Handle dialog open close
     const handleImportClick = (repo: Repo) => {
-        setDialogData({ name: repo.name, clone_url: repo.clone_url });
+        setProjectData({ name: "", gitURL: "", customDomain: "" });
+        setProjectData({
+            name: repo.name,
+            gitURL: repo.clone_url,
+            customDomain: "",
+        });
         setIsOpen(true);
     };
 
-    const handleCreateClick = () => {};
-
-    async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setIsLoading(true);
-
-        if (!projectData.name) {
-            toast.error("Please enter name");
-            setIsLoading(false);
+    const handleCreateClick = async () => {
+        setIsOpen(false);
+        console.log("project data", projectData);
+        if (
+            !projectData.name ||
+            !projectData.gitURL ||
+            !projectData.customDomain
+        ) {
+            toast.error("All fields(Name,Custom-domain,Git-url) are required");
             return;
         }
 
+        console.log("token1", session);
         try {
             const response = await axiosInstance.post(
                 "project/create",
                 projectData,
                 {
-                    // headers: {
-                    //     Authorisation: token,
-                    // },
+                    headers: {
+                        Authorisation: session?.serverToken,
+                    },
                 }
             );
 
@@ -82,7 +87,7 @@ const CreateProject = (props: Props) => {
             console.log(error, "Something went worng");
         }
         setIsLoading(false);
-    }
+    };
 
     // Filter searched data
     const filteredRepos = repos.filter((repo) =>
@@ -91,6 +96,7 @@ const CreateProject = (props: Props) => {
 
     useEffect(() => {
         if (session?.accessToken) {
+            console.log("token", session.serverToken);
             const fetchRepos = async () => {
                 try {
                     const res = await axios.get(
@@ -197,7 +203,13 @@ const CreateProject = (props: Props) => {
                     </div>
                 </div>
             </div>
-            <DialogBar open={isOpen} setOpen={setIsOpen} data={dialogData} />
+            <DialogBar
+                open={isOpen}
+                setOpen={setIsOpen}
+                data={projectData}
+                setData={setProjectData}
+                handleCreateClick={handleCreateClick}
+            />
         </div>
     );
 };

@@ -55,7 +55,7 @@ async function LogIn(req, res) {
         }
 
         // Calling user-service for loggin the user
-        const response = await UserService.SignIn(req.body);
+        const response = await UserService.SignIn(email, password);
 
         const options = {
             expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),

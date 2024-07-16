@@ -7,7 +7,7 @@ import { FaGithub } from "react-icons/fa";
 import Image from "next/image";
 import { Label } from "@/components/ui/label";
 import { TbActivityHeartbeat } from "react-icons/tb";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 import axiosInstance from "@/config/axiosInstance";
 import {
@@ -17,6 +17,7 @@ import {
 } from "@/lib/helper";
 import { GoLinkExternal } from "react-icons/go";
 import Dot from "@/components/Dot";
+import { useSession } from "next-auth/react";
 
 type Props = {};
 
@@ -46,7 +47,9 @@ const Page = (props: Props) => {
         repoName: "",
         owner: "",
     });
+    const router = useRouter();
     const [visitURL, setVisitURL] = useState<string>("");
+    const { data: session } = useSession();
     const [projectData, setProjectData] = useState<ProjectData>({
         name: "",
         gitURL: "",
@@ -67,17 +70,14 @@ const Page = (props: Props) => {
     const projectId = searchParam.get("id");
 
     async function fetchProject() {
-        // if (!token) return;
-        // console.log("token", token);
-
         try {
             const response = await axiosInstance.post(
                 "getproject/",
                 { id: projectId },
                 {
-                    // headers: {
-                    //     Authorisation: token,
-                    // },
+                    headers: {
+                        Authorisation: session?.serverToken,
+                    },
                 }
             );
             setProjectData(response?.data.data);
@@ -98,13 +98,14 @@ const Page = (props: Props) => {
     }
 
     function getStatus() {
-        const status = projectData.Deployement[0].status;
+        let status = projectData?.Deployement[0]?.status;
+        if (!status) status = "NOT_STARTED";
         return status;
     }
 
-    // useEffect(() => {
-    //     fetchProject();
-    // }, [token]);
+    useEffect(() => {
+        fetchProject();
+    }, []);
 
     useEffect(() => {
         visitURLSetter();
@@ -157,18 +158,15 @@ const Page = (props: Props) => {
                         </CardDescription>
                     </CardHeader>
                     <div className="flex items-center justify-between gap-4 mr-5">
-                        <a
-                            className="cursor-pointer"
-                            href="{projectData?.gitURL}"
-                            target="_blank"
+                        <Button
+                            className="border border-gray-600 rounded-r-sm"
+                            variant={"ghost"}
+                            onClick={() =>
+                                router.push(`/deploy/?id=${projectId}`)
+                            }
                         >
-                            <Button
-                                className="border border-gray-600 rounded-r-sm"
-                                variant={"ghost"}
-                            >
-                                Build logs
-                            </Button>
-                        </a>
+                            Deploy
+                        </Button>
                         <Button
                             className="border border-gray-600 rounded-r-sm"
                             variant={"ghost"}
@@ -205,25 +203,41 @@ const Page = (props: Props) => {
                                     <Label className="text-gray-400">
                                         Deployment
                                     </Label>
-                                    <a
-                                        href={getVistURL(projectData.subDomain)}
-                                        target="_blank"
-                                    >
+                                    {getStatus() == "READY" ? (
+                                        <a
+                                            href={getVistURL(
+                                                projectData.subDomain
+                                            )}
+                                            target="_blank"
+                                        >
+                                            <Label className="cursor-pointer">
+                                                {getVistURL(
+                                                    projectData.subDomain
+                                                )}
+                                            </Label>
+                                        </a>
+                                    ) : (
                                         <Label className="cursor-pointer">
-                                            {getVistURL(projectData.subDomain)}
+                                            Project not ready
                                         </Label>
-                                    </a>
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-3 items-start justify-between">
                                     <Label className="text-gray-400">
                                         Domain
                                     </Label>
-                                    <a href={visitURL} target="_blank">
-                                        <Label className="flex items-center gap-1 cursor-pointer">
-                                            {visitURL}
-                                            <GoLinkExternal />
+                                    {getStatus() == "READY" ? (
+                                        <a href={visitURL} target="_blank">
+                                            <Label className="flex items-center gap-1 cursor-pointer">
+                                                {visitURL}
+                                                <GoLinkExternal />
+                                            </Label>
+                                        </a>
+                                    ) : (
+                                        <Label className="cursor-pointer">
+                                            Project not ready
                                         </Label>
-                                    </a>
+                                    )}
                                 </div>
                                 <div className="flex gap-8 items-center ">
                                     <div className="flex flex-col gap-3 items-start justify-between">
@@ -241,8 +255,7 @@ const Page = (props: Props) => {
                                         </Label>
                                         <Label>
                                             {formatDateToHoursAgo(
-                                                projectData.Deployement[0]
-                                                    .updatedAt
+                                                projectData?.createdAt
                                             )}{" "}
                                             by {repoData.owner}
                                         </Label>

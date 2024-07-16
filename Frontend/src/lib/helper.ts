@@ -41,6 +41,9 @@ export function getVistURL(url: string) {
 }
 
 export function formatDateToHoursAgo(dateString: string): string {
+    if (!dateString) {
+        return "Project not deployed yet";
+    }
     const date = new Date(dateString);
     const now = new Date();
     const diffInMilliseconds = now.getTime() - date.getTime();
