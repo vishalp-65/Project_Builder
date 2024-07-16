@@ -1,14 +1,16 @@
 /* eslint-disable react/no-unescaped-entities */
+"use client";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import axiosInstance from "@/config/axiosInstance";
 import { useRouter } from "next/navigation";
 import { CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "./ui/button";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import { FaReact } from "react-icons/fa";
-import { DialogBar } from "./DialogBar";
+import { Button } from "@/components/ui/button";
+import { DialogBar } from "@/components/DialogBar";
+import { Input } from "@/components/ui/input";
 
 type Props = {};
 
@@ -30,7 +32,8 @@ const CreateProject = (props: Props) => {
     const { data: session } = useSession();
     const [repos, setRepos] = useState<Repo[]>([]);
     const [isOpen, setIsOpen] = useState(false);
-
+    const [searchData, setSearchData] = useState("");
+    // const [filteredRepo, setFilteredRepo] = useState(repos);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [dialogData, setDialogData] = useState({ name: "", clone_url: "" });
     const [projectData, setProjectData] = useState<ProjectData>({
@@ -81,9 +84,13 @@ const CreateProject = (props: Props) => {
         setIsLoading(false);
     }
 
+    // Filter searched data
+    const filteredRepos = repos.filter((repo) =>
+        repo.name.toLowerCase().includes(searchData.toLowerCase())
+    );
+
     useEffect(() => {
         if (session?.accessToken) {
-            console.log("Access Token:", session.accessToken);
             const fetchRepos = async () => {
                 try {
                     const res = await axios.get(
@@ -121,7 +128,7 @@ const CreateProject = (props: Props) => {
                 className="w-full flex flex-col items-center justify-evenly mt-5 border 
             border-gray-300 dark:border-gray-600 rounded-lg px-5 py-3 gap-7 lg:gap-4 lg:px-5 lg:py-3 lg:flex lg:flex-row"
             >
-                <div className="w-full lg:w-[45%] flex flex-col items-start justify-between gap-5">
+                <div className="w-full lg:w-[35%] flex flex-col items-start justify-between gap-5">
                     <p className="text-4xl font-bold">
                         Let's build something new
                     </p>
@@ -138,12 +145,21 @@ const CreateProject = (props: Props) => {
                             <CardTitle>Import Git Repository</CardTitle>
                         </CardHeader>
 
+                        <div className="px-4">
+                            <Input
+                                placeholder="Search Repositories..."
+                                className="px-4 w-full bg-inherit mb-4 mt-2"
+                                value={searchData}
+                                onChange={(e) => setSearchData(e.target.value)}
+                            />
+                        </div>
+
                         <div className="h-full px-4">
                             <div
                                 className="h-96 flex flex-col border border-gray-300 dark:border-gray-800 rounded-sm items-center 
-                            justify-between overflow-y-auto "
+                            justify-start overflow-y-auto "
                             >
-                                {repos.map((repo) => (
+                                {filteredRepos.map((repo) => (
                                     <div
                                         className="flex border border-x-gray-300 border-t-gray-300 px-3 
                                     py-3 items-center justify-between w-full dark:border-x-gray-800 dark:border-t-gray-800"

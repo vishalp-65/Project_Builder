@@ -1,6 +1,6 @@
 /** @format */
 "use client";
-import React, { useEffect } from "react";
+import React from "react";
 
 import { HiOutlineChevronUpDown } from "react-icons/hi2";
 
@@ -33,7 +33,6 @@ import { tabNames } from "@/constant/tabName";
 import VercelSvg from "../../public/svg/vercel-svg";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
-import { title } from "process";
 
 type Props = {};
 
@@ -48,20 +47,15 @@ export default function Header() {
         return null;
     }
 
-    async function fetchData() {
-        let token = localStorage.getItem("token");
-        token = token ? token.replace(/^"|"$/g, "") : null;
-
-        if (!token) {
-            return;
+    const handleNavbarClick = (page: any) => {
+        const lowerTittle = page.title.toLocaleLowerCase();
+        if (page.isAccess) {
+            router.push(`/${lowerTittle}`);
         }
-    }
+    };
 
     return (
-        <div
-            className=" px-8 pt-4 border-b border-gray-500"
-            onClick={() => router.push("/")}
-        >
+        <div className=" px-8 pt-4 border-b border-gray-500">
             {/* first section */}
             {}
             <div className="flex justify-between  ">
@@ -178,27 +172,25 @@ export default function Header() {
 
             {/* second section */}
             <section className="flex gap-4 overflow-auto scrollbar-hide">
-                {pages.map((d, i) => (
+                {pages.map((page, i) => (
                     <div
                         key={i}
                         className={cn("py-2 border-b-2  border-transparent", {
-                            "dark:border-white": d.active,
+                            "dark:border-white": page.active,
                         })}
                     >
                         <Button
                             className={cn(
                                 "hover:dark:bg-gray-900 text-gray-500",
                                 {
-                                    "dark:text-white": d.active,
+                                    "dark:text-white": page.active,
                                 }
                             )}
                             variant={"ghost"}
                             key={i}
-                            onClick={() =>
-                                router.push(`/${title.toLowerCase()}`)
-                            }
+                            onClick={() => handleNavbarClick(page)}
                         >
-                            {d.title}{" "}
+                            {page.title}{" "}
                         </Button>
                     </div>
                 ))}
