@@ -1,55 +1,24 @@
-const { exec } = require("child_process");
 const path = require("path");
+const { exec } = require("child_process");
+const dotenv = require("dotenv");
 const fs = require("fs");
-const { S3Client, PutObjectCommand } = require("@aws-sdk/client-s3");
+dotenv.config();
 const mime = require("mime-types");
-const { Kafka } = require("kafkajs");
+const validateBuildScript = require("./utils/validation");
+const { uploadToS3 } = require("./services/s3");
+const { producer } = require("./services/kafka");
+const SUB_DOMAIN = process.env.SUB_DOMAIN;
+const BUILD_COMMAND = process.env.BUILD_COMMAND;
+const OUTPUT_DIR = process.env.OUTPUT_DIR;
+const DEPLOYMENT_ID = process.env.DEPLOYMENT_ID;
 
-const PROJECT_ID = process.env.PROJECT_ID;
-const DEPLOYEMENT_ID = process.env.DEPLOYEMENT_ID;
-const KAFKA_BROKERS = process.env.KAFKA_BROKERS;
-const KAFKA_TOPICS = process.env.KAFKA_TOPICS;
-const S3_REGION = process.env.S3_REGION;
-const BUCKET_NAME = process.env.BUCKET_NAME;
-const S3_ACCESS_KEY_ID = process.env.S3_ACCESS_KEY_ID;
-const S3_SECRET_ACCESS_KEY = process.env.S3_SECRET_ACCESS_KEY;
-
-const s3Client = new S3Client({
-    region: S3_REGION,
-    credentials: {
-        accessKeyId: S3_ACCESS_KEY_ID,
-        secretAccessKey: S3_SECRET_ACCESS_KEY,
-    },
-});
-
-const kafka = new Kafka({
-    clientId: `docker-build-server-${DEPLOYEMENT_ID}`,
-    brokers: [KAFKA_BROKERS],
-    ssl: {
-        ca: [fs.readFileSync(path.join(__dirname, "kafka.pem"), "utf-8")],
-    },
-    sasl: {
-        username: "avnadmin",
-        password: KAFKA_PASSWORD,
-        mechanism: "plain",
-    },
-    connectionTimeout: 100000,
-    requestTimeout: 25000,
-    retry: {
-        initialRetryTime: 100,
-        retries: 10,
-    },
-});
-
-const producer = kafka.producer();
-
-async function publishlog(log) {
+async function publishLog(log, status) {
     await producer.send({
-        topic: KAFKA_TOPICS,
+        topic: "builder-logs",
         messages: [
             {
                 key: "log",
-                value: JSON.stringify({ PROJECT_ID, DEPLOYEMENT_ID, log }),
+                value: JSON.stringify({ DEPLOYMENT_ID, log, status }),
             },
         ],
     });
@@ -57,65 +26,59 @@ async function publishlog(log) {
 
 async function init() {
     await producer.connect();
+    console.log("Started Executing....");
 
-    console.log("Executing script.js");
-    await publishlog("Building...");
-    const build_outputs_path = path.join(__dirname, "build_outputs");
-
-    // to install packages and build project
-    const build_process = exec(
-        `cd ${build_outputs_path} && npm install && npm run build`
+    await publishLog("Starting deployment process...", "starting");
+    const outDirPath = path.join(__dirname, "output");
+    console.log("Validating build script...");
+    await publishLog("Validating build script...");
+    validateBuildScript(path.join(outDirPath, "package.json"));
+    console.log("Installing dependencies and running build command...");
+    await publishLog(
+        "Installing dependencies and running build command...",
+        "building"
     );
-
-    // for ongoing process output
-    build_process.stdout.on("data", async function (data) {
-        console.log(data.toString());
-        await publishlog(data.toString());
+    const prc = exec(`cd ${outDirPath} && npm install && ${BUILD_COMMAND}`);
+    prc.stdout.on("data", async function (data) {
+        console.log("LOG:", data.toString());
+        await publishLog(data.toString());
     });
 
-    // for error process output
-    build_process.stdout.on("error", async function (data) {
-        console.log("Error", data.toString());
-        await publishlog(`error:${data.toString()}`);
+    prc.stdout.on("error", async function (data) {
+        console.log("ERROR:", data.toString());
+        await publishLog(data.toString(), "failed");
     });
 
-    // for completed process
-    build_process.stdout.on("close", async function () {
-        console.log("Build complete");
-        await publishlog("Build completed");
+    prc.on("close", async function (code) {
+        console.log(code);
 
-        // getting Dist forlder path
-        const distFolderPath = path.join(__dirname, "build_outputs", "dist");
-        const distFolderContents = fs.readdirSync(distFolderPath, {
-            // to get all files in nested folders
+        console.log("Reading build output directory...");
+        await publishLog("Reading build output directory...", "uploading");
+        const distPath = path.join(outDirPath, OUTPUT_DIR);
+
+        const distContent = fs.readdirSync(distPath, {
             recursive: true,
         });
 
-        await publishlog("Starting upload");
-        for (const file of distFolderContents) {
-            const filePath = path.join(distFolderPath, file);
-
-            // if filePath is folder then skip it
+        for (const file of distContent) {
+            const filePath = path.join(distPath, file);
             if (fs.lstatSync(filePath).isDirectory()) continue;
-
-            console.log("uploading", filePath);
-            await publishlog(`uploading ${file}`);
-
-            // else upload it on s3
-            const command = new PutObjectCommand({
-                Bucket: BUCKET_NAME,
-                Key: `__outputs/${PROJECT_ID}/${file}`,
-                Body: fs.createReadStream(filePath),
-                // Use mime-type to get file extenstion
-                ContentType: mime.lookup(filePath),
-            });
-
-            await s3Client.send(command);
-            console.log("uploaded", filePath);
-            await publishlog(`uploaded ${filePath}`);
+            console.log("Uploading", filePath);
+            await publishLog(`Uploading ${file}...`);
+            try {
+                uploadToS3(
+                    `outputs/${SUB_DOMAIN}/${file}`,
+                    fs.createReadStream(filePath),
+                    mime.lookup(filePath)
+                );
+            } catch (error) {
+                console.log(`Upload failed: ${error.message}`);
+                await publishLog(`Upload failed: ${error.message}`, "failed");
+                process.exit(1);
+            }
         }
-        await publishlog("Done");
-        console.log("Done...");
+        await publishLog(`${SUB_DOMAIN} is live now`, "deployed");
+        console.log(`${SUB_DOMAIN} is live now`);
         process.exit(0);
     });
 }
