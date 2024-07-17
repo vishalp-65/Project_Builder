@@ -1,34 +1,44 @@
 {
   "name": "api-server",
   "version": "1.0.0",
-  "description": "",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
-    "dev": "npx nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "mkdir -p dist && cp -r src/* dist/"
+    "start": "node dist/index.js",
+    "dev": "tsc-watch --onSuccess \"npm start\"",
+    "build": "tsc"
   },
-  "author": "",
+  "keywords": [],
+  "author": "Shakir Farhan",
   "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.14.2",
+    "@types/nodemailer": "^6.4.15",
+    "@types/unique-slug": "^4.0.0",
+    "prisma": "^5.15.0",
+    "ts-node": "^10.9.2",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.4.5"
+  },
   "dependencies": {
-    "@aws-sdk/client-ecs": "^3.554.0",
-    "@clickhouse/client": "^1.0.1",
-    "@prisma/client": "^5.12.1",
-    "bcrypt": "^5.1.1",
-    "cookie-parser": "^1.4.6",
+    "@aws-sdk/client-ecs": "^3.592.0",
+    "@octokit/auth-app": "^7.1.0",
+    "@octokit/rest": "^20.1.1",
+    "@prisma/client": "^5.15.0",
+    "axios": "^1.7.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "http-status-codes": "^2.3.0",
+    "http-status": "^1.7.4",
+    "ioredis": "^5.4.1",
     "jsonwebtoken": "^9.0.2",
     "kafkajs": "^2.2.4",
     "nodemailer": "^6.9.13",
-    "nodemon": "^3.1.0",
-    "otp-generator": "^4.0.1",
-    "prisma": "^5.12.1",
-    "random-word-slugs": "^0.1.7",
+    "slugify": "^1.6.6",
     "socket.io": "^4.7.5",
-    "uuid": "^9.0.1",
-    "zod": "^3.22.5"
+    "unique-slug": "^4.0.0"
   }
 }
