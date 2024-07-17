@@ -5,7 +5,8 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -13,53 +14,121 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum DeployementStatus {
-  NOT_STARTED
-  QUEUED
-  IN_PROGRESS
-  READY
-  FAIL
+enum AuthProvider {
+  local
+  github
+  google
 }
 
-model User{
-  id            String    @id @default(uuid())
-  name          String
-  email         String    @unique
-  password      String?
-  image         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-
-  Project       Project[]
+enum AccountStatus {
+  active
+  suspended
+  deactivated
 }
 
-model OTP{
-  id            String    @id @default(uuid())
-  email         String    
-  otp           String
-  createdAt     DateTime      @default(now())
+enum UserRole {
+  user
+  admin
+  moderator
+}
+
+model User {
+  id                String        @id @default(uuid())
+  email             String        @unique
+  password          String        @unique
+  salt              String?
+  githubAccessToken String?       @map("github_access_token")
+  githubAppToken    String?       @map("github_app_token")
+  installationId    Int?          @unique @map("installation_id")
+  fullName          String?       @map("full_name")
+  verified          Boolean       @default(false)
+  githubUsername    String?       @unique @map("github_username")
+  status            AccountStatus @default(active)
+  role              UserRole      @default(user)
+  provider          AuthProvider  @default(local)
+  createdAt         DateTime?     @default(now()) @map("created_at")
+  updatedAt         DateTime?     @updatedAt @map("updated_at")
+  projects          Project[]
+
+  @@map("users")
+}
+
+enum DeploymentMethod {
+  git
+  upload_link
 }
 
 model Project {
-  id            String        @id @default(uuid())
-  name          String
-  gitURL        String        @map("git_url")
-  subDomain     String        @unique @map("subdomain")
-  customDomain  String?       @unique @map("custom_domain")
-  userId        String        @map("user_id")
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id               String           @id @default(uuid())
+  name             String
+  subDomain        String           @unique @map("sub_domain")
+  repo             String
+  userId           String           @map("user_id")
+  buildCommand     String           @default("npm run build") @map("build_command")
+  deploymentMethod DeploymentMethod @default(upload_link) @map("deployment_method")
+  outputDir        String           @default("build") @map("output_dir")
+  user             User             @relation(fields: [userId], references: [id])
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  deployments      Deployment[]
+  environments     Environment[]
 
-  Deployement   Deployement[]
-  user          User          @relation(fields: [userId], references: [id])
+  @@map("projects")
 }
 
-model Deployement {
-  id            String            @id @default(uuid())
-  project       Project           @relation(fields: [projectId], references: [id])
-  projectId     String            @map("project_id")
-  status        DeployementStatus @default(NOT_STARTED)
+enum DeploymentStatus {
+  queued
+  starting
+  building
+  uploading
+  deployed
+  cancelled
+  failed
+}
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model Deployment {
+  id         String           @id @default(uuid())
+  projectId  String           @map("project_id")
+  project    Project          @relation(fields: [projectId], references: [id])
+  status     DeploymentStatus @default(queued)
+  commitHash String?          @map("commit_hash")
+  createdAt  DateTime         @default(now()) @map("created_at")
+  updatedAt  DateTime         @updatedAt @map("updated_at")
+  logs       Log[]
+
+  @@map("deployments")
+}
+
+model Log {
+  id           String     @id @default(uuid())
+  deploymentId String     @map("deployment_id")
+  deployment   Deployment @relation(fields: [deploymentId], references: [id])
+  log          String
+  createdAt    DateTime   @default(now()) @map("created_at")
+}
+
+model Environment {
+  id                   String                @id @default(uuid())
+  projectId            String                @map("project_id")
+  name                 String                @default("default")
+  project              Project               @relation(fields: [projectId], references: [id])
+  environmentVariables EnvironmentVariable[]
+  createdAt            DateTime              @default(now()) @map("created_at")
+  updatedAt            DateTime              @updatedAt @map("updated_at")
+
+  @@unique([name, projectId])
+  @@map("environments")
+}
+
+model EnvironmentVariable {
+  id            String      @id @default(uuid())
+  environmentId String      @map("environment_id")
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  key           String
+  value         String
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  @@unique([environmentId, key])
+  @@map("environment_variables")
 }
