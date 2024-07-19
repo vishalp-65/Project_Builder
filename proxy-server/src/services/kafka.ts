@@ -11,7 +11,12 @@ const kafkaClient = new Kafka({
         mechanism: "plain",
     },
     ssl: {
-        ca: [fs.readFileSync(path.resolve(__dirname, "../../ca.pem"), "utf-8")],
+        ca: [
+            fs.readFileSync(
+                path.resolve(__dirname, "../../kafka.pem"),
+                "utf-8"
+            ),
+        ],
     },
 });
 const producer = kafkaClient.producer();
