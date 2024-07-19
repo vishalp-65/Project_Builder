@@ -8,3 +8,4 @@ Api-Server/kafka.pem
 build-server/kafka.pem
 S3-reverse-proxy/prisma/ca.pem
 Api-Server/github-app.pem
+proxy-server/kafka.pem
